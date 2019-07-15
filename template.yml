@@ -8,23 +8,14 @@ Resources:
     nodejs8:
       Type: 'Aliyun::Serverless::Function'
       Properties:
-        Handler: updater.handler
+        Handler: index.handler
         CodeUri: './'
         Description: 'fun test'
         Runtime: nodejs8
       Events:
         http-test:
-          Type: HTTP
-          Properties:
-            AuthType: ANONYMOUS
-            Methods: ['PATCH'] 
-  HttpFunctionGroup: # Api Group
-    Type: 'Aliyun::Serverless::Api'
-    Properties:
-      StageName: RELEASE
-      DefinitionBody:
-        '/':
-          patch:
-            x-aliyun-apigateway-api-name: fun_test
-            x-aliyun-apigateway-fc:
-              arn: acs:fc:::services/${fc.Arn}/functions/${httpFunction.Arn}/
+          Type: Timer
+            Properties:
+              CronExpression: '0 0 * * ? *'
+              Enable: true
+              Payload: 'awesome-fc'
