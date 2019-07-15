@@ -8,7 +8,7 @@ const mysql = require('mysql');
 /**
  * メイン処理
  */
-const main = (context) => {
+const main = (event, context, callback) => {
     const connection = {
         host     : process.env['db_host'],
         user     : process.env['db_user'],
@@ -56,12 +56,12 @@ const main = (context) => {
 /**
  * 最初に呼ばれる関数
  */
-exports.handler = hook(async (context) => {
+module.exports.handler = (event, context, callback) => { 
     console.log('-----begin------');
 
     const bugsnagClient = bugsnag(process.env['bugsnag_api_key']);
     bugsnagClient.autoNotify(() => {
-        main(context);
+        main(event, context, callback);
     });
     console.log('------end------');
 });
