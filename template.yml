@@ -1,0 +1,30 @@
+ROSTemplateFormatVersion: '2015-09-01'
+Transform: 'Aliyun::Serverless-2018-04-03'
+Resources:
+  fun-test:
+    Type: 'Aliyun::Serverless::Service'
+    Properties:
+      Description: 'fun test'
+    nodejs8:
+      Type: 'Aliyun::Serverless::Function'
+      Properties:
+        Handler: updater.handler
+        CodeUri: './'
+        Description: 'fun test'
+        Runtime: nodejs8
+      Events:
+        http-test:
+          Type: HTTP
+          Properties:
+            AuthType: ANONYMOUS
+            Methods: ['PATCH'] 
+  HttpFunctionGroup: # Api Group
+    Type: 'Aliyun::Serverless::Api'
+    Properties:
+      StageName: RELEASE
+      DefinitionBody:
+        '/':
+          patch:
+            x-aliyun-apigateway-api-name: fun_test
+            x-aliyun-apigateway-fc:
+              arn: acs:fc:::services/${fc.Arn}/functions/${httpFunction.Arn}/

@@ -2,22 +2,23 @@
 
 const hook = require('fc-helper');
 const moment = require("moment");
+const bugsnag = require('bugsnag');
+const mysql = require('mysql');
 
-exports.handler = hook((req, res) => {
-    console.log('-----begin------');
-    const mysql = require('mysql');
-    // TODO env的なものから取れる？
-    const con = {
-        host     : 'localhost',
-        user     : 'user',
-        password : 'password'
+/**
+ * メイン処理
+ */
+const main = (context) => {
+    const connection = {
+        host     : process.env['db_host'],
+        user     : process.env['db_user'],
+        password : process.env['db_password']
     }
 
-    connection.connect((err) => {
-        if (err) {
-            // TODO bugsnag?
+    connection.connect((error) => {
+        if (error) {
             console.error('connection faild: ' + err.stack);
-            return;
+            throw error;
         }
     
         console.log('connected as id ' + connection.threadId);
@@ -30,13 +31,13 @@ exports.handler = hook((req, res) => {
                                  .format("YYYY-MM-DD HH:mm:ss"),
 
         connection.query({
-            sql: 'update table set status = 1 where created_at < ?',
+            sql: 'UPDATE TABLE SET STATUS = 1 WHERE CREATED_AT < ?',
             timeout: 40000, // 40s
             values: [deadline]
         }, (error, results, fields) => {
             if (error) { 
                 connection.rollback(() => {
-                    throw err;
+                    throw error;
                 });
             }
         });
@@ -49,6 +50,18 @@ exports.handler = hook((req, res) => {
             }
             console.log('------success!------');
         });
+    });
+}
+
+/**
+ * 最初に呼ばれる関数
+ */
+exports.handler = hook(async (context) => {
+    console.log('-----begin------');
+
+    const bugsnagClient = bugsnag(process.env['bugsnag_api_key']);
+    bugsnagClient.autoNotify(() => {
+        main(context);
     });
     console.log('------end------');
 });
